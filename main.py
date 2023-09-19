@@ -11,9 +11,12 @@ def checkFileExists(file):
 def checkFileChecksum(fileSource, fileReplica):
   checksum = False
   
-  with open(fileSource) as source:
-    with open(fileReplica) as replica:
-      if hashlib.md5(source.read().encode("utf-8")).hexdigest() == hashlib.md5(replica.read().encode("utf-8")).hexdigest():
+  with open(fileSource, "rb") as source:
+    with open(fileReplica, "rb") as replica:
+      sourceData = source.read()
+      replicaData = replica.read()
+      
+      if hashlib.md5(sourceData).hexdigest() == hashlib.md5(replicaData).hexdigest():
         checksum = True
   
   return checksum
@@ -27,8 +30,8 @@ def syncFiles(fileSource, fileReplica):
   if fileExists and checkFileChecksum(fileSource, fileReplica):
     return
   
-  with open(fileSource, "r") as source:
-    with open(fileReplica, "w") as replica:
+  with open(fileSource, "rb") as source:
+    with open(fileReplica, "wb") as replica:
       if fileExists:
         logging.info("Updating file: " + fileReplica)
       else:
@@ -84,9 +87,12 @@ def update(args):
   
 
 # A function used to repeatedly call update at a regular interval
+# The update gets recalled after the previous synchronization finishes
+# Otherwise threads can conflict with one another (could use a lock, but that can cause severe performance issues if interval is too short and files too big as threads would just keep on being created and wait for each other)
 def updateThread(args):
-  threading.Timer(interval=args.interval, function=updateThread, kwargs={'args': args}).start()
   update(args)
+  threading.Timer(interval=args.interval, function=updateThread, kwargs={'args': args}).start()
+  
 
 if __name__ == "__main__":
   # Parse arguments
