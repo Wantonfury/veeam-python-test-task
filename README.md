@@ -11,13 +11,22 @@
 $ git clone git@github.com:Wantonfury/veeam-python-test-task.git
 ```
 
-### Run the program
+### Run the program on Windows
 ```bash
 # Run the code using
 $ python main.py -s source -r replica
 
 # or with optional arguments
 $ python main.py -s source -r replica -i 2 -l logs.txt
+```
+
+### Run the program on Linux
+```bash
+# Run the code using
+$ python3 main.py -s source -r replica
+
+# or with optional arguments
+$ python3 main.py -s source -r replica -i 2 -l logs.txt
 ```
 
 ### The following arguments can be used:
