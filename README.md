@@ -1,7 +1,7 @@
 # veeam-python-test-task
 
 ## This is a task written in python to one-way synchronize folders
-### Written in python 3.11.5
+### Written using python 3.11.5
 
 ## How to setup
 
