@@ -1,5 +1,5 @@
 
-import os, sys, logging, argparse, threading, hashlib
+import os, sys, logging, argparse, time, hashlib
 
 # Check if file exists
 def checkFileExists(file):
@@ -37,7 +37,7 @@ def syncFiles(fileSource, fileReplica):
       replica.write(source.read())
 
 # This is called every interval to check and synchronize
-def update(args):
+def synchronize(args):
   sourceFiles = [] # files found in source (uses replica path folder for ease of use)
   sourceFolders = [] # folders found in source (uses replica path folder for ease of use as well)
   
@@ -81,15 +81,6 @@ def update(args):
       if folder not in sourceFolders:
         logging.info("Remove folder: " + folder)
         os.rmdir(folder)
-  
-
-# A function used to repeatedly call update at a regular interval
-# The update gets recalled after the previous synchronization finishes
-# Otherwise threads can conflict with one another (could use a lock, but that can cause severe performance issues if interval is too short and files too big as threads would just keep on being created and wait for each other)
-def updateThread(args):
-  update(args)
-  threading.Timer(interval=args.interval, function=updateThread, kwargs={'args': args}).start()
-  
 
 if __name__ == "__main__":
   # Parse arguments
@@ -117,5 +108,7 @@ if __name__ == "__main__":
   # Log arguments
   logging.info("Synchronization initialized with: source=" + args.source + ", replica=" + args.replica + " logs=" + args.logs + " interval=" + str(args.interval))
   
-  # Start the synchronization interval
-  updateThread(args)
+  # Start the synchronization update
+  while True:
+    synchronize(args)
+    time.sleep(args.interval)
