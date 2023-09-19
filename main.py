@@ -100,10 +100,9 @@ if __name__ == "__main__":
   parser.add_argument("-i", "--interval", required=False, help="interval in seconds used when synchronizing (default: 2.0)", default=2.0, type=float, dest="interval")
   args = parser.parse_args()
   
-  # Check if source folder exists, if not then exit
+  # Check if source folder exists, if not then create it
   if not os.path.isdir(args.source):
-    print("Source \"" + os.getcwd() + "\\" + args.source + "\" folder not found.")
-    sys.exit(1)
+    os.mkdir(args.source)
   
   # Create replica folder if it does not already exist
   if not os.path.isdir(args.replica):
