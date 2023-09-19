@@ -25,3 +25,5 @@ $ python main.py -s source -r replica -i 2 -l logs.txt
 - -r or --replica to give the target replica folder
 - -i or --interval to set the synchronization interval (default 2 seconds)
 - -l or --logs to set the file where the logs are written (default logs.txt)
+
+### The program can be closed using: Ctrl + C
