@@ -13,10 +13,7 @@ def checkFileChecksum(fileSource, fileReplica):
   
   with open(fileSource, "rb") as source:
     with open(fileReplica, "rb") as replica:
-      sourceData = source.read()
-      replicaData = replica.read()
-      
-      if hashlib.md5(sourceData).hexdigest() == hashlib.md5(replicaData).hexdigest():
+      if hashlib.md5(source.read()).hexdigest() == hashlib.md5(replica.read()).hexdigest():
         checksum = True
   
   return checksum
