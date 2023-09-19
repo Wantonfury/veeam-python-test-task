@@ -1,7 +1,7 @@
 
 import os, sys, logging, argparse, threading, hashlib
 
-# Check if file is synchronized
+# Check if file exists
 def checkFileExists(file):
   if os.path.isfile(file):
     return True
@@ -23,6 +23,7 @@ def syncFiles(fileSource, fileReplica):
   fileExists = checkFileExists(fileReplica)
   
   # If file does not exist there is no point in checking checksum
+  # If file does exist check checksum and if they are the same then the file is already synchronized, therefore skip
   if fileExists and checkFileChecksum(fileSource, fileReplica):
     return
   
@@ -37,43 +38,47 @@ def syncFiles(fileSource, fileReplica):
 
 # This is called every interval to check and synchronize
 def update(args):
-  replicaFiles = []
-  foldersSource = []
+  sourceFiles = [] # files found in source (uses replica path folder for ease of use)
+  sourceFolders = [] # folders found in source (uses replica path folder for ease of use as well)
   
   # Synchronize source files
   for (dirpath, dirnames, filenames) in os.walk(args.source):
     replicaPath = dirpath.replace(args.source, args.replica) # The path to the replica folder
-    foldersSource.append(replicaPath) # Keep track of folders that should be in replica
+    sourceFolders.append(replicaPath) # Keep track of folders that should be in replica
     
-    # Create folders
+    # Synchronize folders
     for dir in dirnames:
       folder = os.path.join(replicaPath, dir)
       if not os.path.isdir(folder):
         logging.info("Creating folder: " + folder)
         os.mkdir(folder)
     
+    # Synchronize files
     for filename in filenames:
       fileSource = os.path.join(dirpath, filename)
       fileReplica = os.path.join(replicaPath, filename)
       
-      replicaFiles.append(fileReplica) # Keep track of files that should be in replica folder
+      sourceFiles.append(fileReplica) # Keep track of files that should be in replica folder
       
       syncFiles(fileSource, fileReplica)
   
-  # Remove non-source files in replica
+  # Remove non-source files in replica, starting from leaves
   for (dirpath, dirnames, filenames) in os.walk(args.replica, topdown=False):
+    # Synchronize file removal
     for filename in filenames:
       file = os.path.join(dirpath, filename)
       
       # If file should not be in replica folder then delete it
-      if not file in replicaFiles:
+      if not file in sourceFiles:
         logging.info("Deleting file: " + file)
         os.remove(file)
     
-    # Synchronize removed folders
+    # Synchronize folder removal
     for dir in dirnames:
       folder = os.path.join(dirpath, dir)
-      if folder not in foldersSource:
+      
+      # If folder should not be in replica folder then delete it
+      if folder not in sourceFolders:
         logging.info("Remove folder: " + folder)
         os.rmdir(folder)
   
