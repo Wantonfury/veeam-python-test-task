@@ -1,6 +1,7 @@
 # veeam-python-test-task
 
 ## This is a task written in python to one-way synchronize folders
+### Written in python 3.11.5
 
 ## How to setup
 
@@ -23,4 +24,4 @@ $ python main.py -s source -r replica -i 2 -l logs.txt
 - -s or --source to give the source folder path (must already exist)
 - -r or --replica to give the target replica folder (does not need to exist beforehand)
 - -i or --interval to set the synchronization interval (default 2 seconds)
-- l or --logs to set the file where the logs are written (default logs.txt)
+- -l or --logs to set the file where the logs are written (default logs.txt)
