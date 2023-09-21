@@ -41,46 +41,49 @@ def synchronize(args):
   sourceFiles = [] # files found in source (uses replica path folder for ease of use)
   sourceFolders = [] # folders found in source (uses replica path folder for ease of use as well)
   
-  # Synchronize source files
-  for (dirpath, dirnames, filenames) in os.walk(args.source):
-    replicaPath = dirpath.replace(args.source, args.replica) # The path to the replica folder
-    sourceFolders.append(replicaPath) # Keep track of folders that should be in replica
+  try:
+    # Synchronize source files
+    for (dirpath, dirnames, filenames) in os.walk(args.source):
+      replicaPath = dirpath.replace(args.source, args.replica) # The path to the replica folder
+      sourceFolders.append(replicaPath) # Keep track of folders that should be in replica
+      
+      # Synchronize folders
+      for dir in dirnames:
+        folder = os.path.join(replicaPath, dir)
+        if not os.path.isdir(folder):
+          logging.info("Creating folder: " + folder)
+          os.mkdir(folder)
+      
+      # Synchronize files
+      for filename in filenames:
+        fileSource = os.path.join(dirpath, filename)
+        fileReplica = os.path.join(replicaPath, filename)
+        
+        sourceFiles.append(fileReplica) # Keep track of files that should be in replica folder
+        
+        syncFiles(fileSource, fileReplica)
     
-    # Synchronize folders
-    for dir in dirnames:
-      folder = os.path.join(replicaPath, dir)
-      if not os.path.isdir(folder):
-        logging.info("Creating folder: " + folder)
-        os.mkdir(folder)
-    
-    # Synchronize files
-    for filename in filenames:
-      fileSource = os.path.join(dirpath, filename)
-      fileReplica = os.path.join(replicaPath, filename)
+    # Remove non-source files in replica, starting from leaves
+    for (dirpath, dirnames, filenames) in os.walk(args.replica, topdown=False):
+      # Synchronize file removal
+      for filename in filenames:
+        file = os.path.join(dirpath, filename)
+        
+        # If file should not be in replica folder then delete it
+        if not file in sourceFiles:
+          logging.info("Deleting file: " + file)
+          os.remove(file)
       
-      sourceFiles.append(fileReplica) # Keep track of files that should be in replica folder
-      
-      syncFiles(fileSource, fileReplica)
-  
-  # Remove non-source files in replica, starting from leaves
-  for (dirpath, dirnames, filenames) in os.walk(args.replica, topdown=False):
-    # Synchronize file removal
-    for filename in filenames:
-      file = os.path.join(dirpath, filename)
-      
-      # If file should not be in replica folder then delete it
-      if not file in sourceFiles:
-        logging.info("Deleting file: " + file)
-        os.remove(file)
-    
-    # Synchronize folder removal
-    for dir in dirnames:
-      folder = os.path.join(dirpath, dir)
-      
-      # If folder should not be in replica folder then delete it
-      if folder not in sourceFolders:
-        logging.info("Remove folder: " + folder)
-        os.rmdir(folder)
+      # Synchronize folder removal
+      for dir in dirnames:
+        folder = os.path.join(dirpath, dir)
+        
+        # If folder should not be in replica folder then delete it
+        if folder not in sourceFolders:
+          logging.info("Remove folder: " + folder)
+          os.rmdir(folder)
+  except Exception as e:
+    logging.error("An error occurred: " + str(e))
 
 if __name__ == "__main__":
   # Parse arguments
@@ -109,6 +112,9 @@ if __name__ == "__main__":
   logging.info("Synchronization initialized with: source=" + args.source + ", replica=" + args.replica + " logs=" + args.logs + " interval=" + str(args.interval))
   
   # Start the synchronization update
-  while True:
-    synchronize(args)
-    time.sleep(args.interval)
+  try:
+    while True:
+      synchronize(args)
+      time.sleep(args.interval)
+  except KeyboardInterrupt:
+    logging.info("Synchronization stopped by user.")
